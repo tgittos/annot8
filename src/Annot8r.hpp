@@ -2,6 +2,18 @@
 #define ANNOT8R_HPP
 
 #include <SDL/SDL.h>
+// rock and roll, OpenGL
+#ifdef __APPLE__
+  #include <OpenGL/gl.h>
+  #include <OpenGL/glu.h>
+#else
+  #ifdef _WIN32
+    #include <windows.h>
+  #endif
+  #include <gl/gl.h>
+  #include <gl/glu.h>
+  #include <gl/glut.h>
+#endif
 
 class Annot8r {
 
@@ -17,8 +29,8 @@ class Annot8r {
     int OnExecute();
 
     bool OnInit();
+    void OnRender();
     void OnEvent(SDL_Event* event);
-    void OnEvent();
     void OnCleanup();
 
 };
