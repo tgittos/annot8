@@ -12,7 +12,7 @@
   #endif
   #include <gl/gl.h>
   #include <gl/glu.h>
-  #include <gl/glut.h>
+  #include <glut.h>
 #endif
 
 class Annot8r {

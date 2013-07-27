@@ -11,9 +11,14 @@
 *.la
 *.a
 
-# Confirmed Crit specific stuff
+# Visual Studio stuff
+*.user
+*.suo
+Debug
+Release
+
+# Project config stuff
 out
 bin
-build
 .rbenv*
 *.swp
