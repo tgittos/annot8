@@ -41,32 +41,114 @@ bool Annot8r::OnInit() {
   //   program calls TTF_Quit() for us. 
 
   // initialize OpenGL
-  glClearColor(0, 0, 0, 0);
-  glViewport(0, 0, 800, 600);
-  // throw it into orthographic projection
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(0, 800, 600, 0, 1, -1);
-  // reset ready for data
-  glMatrixMode(GL_MODELVIEW);
-  glEnable(GL_TEXTURE_2D);
-  glLoadIdentity();
+  InitGL();
 
   return true;
 }
 
-void Annot8r::OnRender() {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
+void Annot8r::InitGL() {
+  InitializeProgram();
+  InitializeVertexBuffer();
 
-  // draw some cubes in immediate mode
-  // this sucks, gotta get some non immediate mode junk in
-  glBegin(GL_QUADS);
-    glColor3f(1, 0, 0); glVertex3f(0, 0, 0);
-    glColor3f(1, 1, 0); glVertex3f(100, 0, 0);
-    glColor3f(1, 0, 1); glVertex3f(100, 100, 0);
-    glColor3f(1, 1, 1); glVertex3f(0, 100, 0);
-  glEnd();
+  glGenBuffers(1, &vao);
+  glBindBuffer(GL_ARRAY_BUFFER, vao);
+}
+
+void Annot8r::InitializeProgram() {
+  std::vector<GLuint> shaderList;
+
+  shaderList.push_back(CreateShader(GL_VERTEX_SHADER, LoadStringFromFile("demo.vertex")));
+  shaderList.push_back(CreateShader(GL_FRAGMENT_SHADER, LoadStringFromFile("demo.fragment")));
+
+  theProgram = CreateProgram(shaderList);
+
+  std::for_each(shaderList.begin(), shaderList.end(), glDeleteShader);
+}
+
+void Annot8r::InitializeVertexBuffer() {
+  //data!
+  float vertexPositions[] = {
+      0.75f, 0.75f, 0.0f, 1.0f,
+      0.75f, -0.75f, 0.0f, 1.0f,
+      -0.75f, -0.75f, 0.0f, 1.0f,
+  };
+
+  glGenBuffers(1, &positionBufferObject);
+
+  glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+GLuint Annot8r::CreateShader(GLenum shaderType, const std::string &shaderFile) {
+  GLuint shader = glCreateShader(shaderType);
+  const char *data = shaderFile.c_str();
+  glShaderSource(shader, 1, &data, NULL);
+
+  glCompileShader(shader);
+
+  GLint status;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+  if (status == GL_FALSE) {
+    // oops!
+    GLint infoLogLength;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+    GLchar *infoLog = new GLchar[infoLogLength + 1];
+    glGetShaderInfoLog(shader, infoLogLength, NULL, infoLog);
+
+    const char *friendlyShaderType = NULL;
+    switch(shaderType) {
+      case GL_VERTEX_SHADER: friendlyShaderType = "vertex"; break;
+      case GL_FRAGMENT_SHADER: friendlyShaderType = "fragment"; break;
+      //case GL_GEOMETRY_SHADER: friendlyShaderType = "geometry"; break; // LOL no geometry shaders in OpenGL 2.0
+    }
+
+    fprintf(stderr, "Compile failure in %s shader:\n%s\n", friendlyShaderType, infoLog);
+    delete[] infoLog;
+  }
+  return shader;
+}
+
+GLuint Annot8r::CreateProgram(const std::vector<GLuint> &shaderList) {
+  GLuint program = glCreateProgram();
+
+  for(size_t i = 0; i < shaderList.size(); i++) {
+    glAttachShader(program, shaderList[i]);
+  }
+
+  glLinkProgram(program);
+
+  GLint status;
+  glGetProgramiv(program, GL_LINK_STATUS, &status);
+  if (status == GL_FALSE) {
+    //oops again
+    GLint infoLogLength;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+    GLchar *infoLog = new GLchar[infoLogLength + 1];
+    glGetProgramInfoLog(program, infoLogLength, NULL, infoLog);
+
+    fprintf(stderr, "Linker failure:\n%s\n", infoLog);
+    delete[] infoLog;
+  }
+  return program;
+}
+
+void Annot8r::OnRender() {
+  glClearColor(0.f, 0.f, 0.f, 0.f);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  glUseProgram(theProgram);
+
+  glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glDrawArrays(GL_TRIANGLES, 0, 3);
+
+  glDisableVertexAttribArray(0);
+  glUseProgram(0);
 
   SDL_GL_SwapBuffers();
 }
@@ -80,4 +162,11 @@ void Annot8r::OnEvent(SDL_Event* event) {
 void Annot8r::OnCleanup() {
   TTF_Quit();
   SDL_Quit();
+}
+
+std::string Annot8r::LoadStringFromFile(const char* path) {
+  std::ifstream fileStream(path);
+  std::string str((std::istreambuf_iterator<char>(fileStream)),
+                   std::istreambuf_iterator<char>());
+  return str;
 }

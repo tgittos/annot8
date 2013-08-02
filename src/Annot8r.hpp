@@ -3,6 +3,12 @@
 
 #include <SDL/SDL.h>
 #include <SDL_ttf.h>
+#include <fstream>
+#include <streambuf>
+#include <string>
+#include <vector>
+#include <algorithm>
+
 // rock and roll, OpenGL
 #ifdef __APPLE__
   #include <OpenGL/gl.h>
@@ -24,16 +30,29 @@ class Annot8r {
   bool running;
   SDL_Surface* displaySurface;
 
+  GLuint positionBufferObject;
+  GLuint vao;
+  GLuint theProgram;
+
   public:
 
-    Annot8r();
+  Annot8r();
 
-    int OnExecute();
+  int OnExecute();
 
-    bool OnInit();
-    void OnRender();
-    void OnEvent(SDL_Event* event);
-    void OnCleanup();
+  bool OnInit();
+  void OnRender();
+  void OnEvent(SDL_Event* event);
+  void OnCleanup();
+
+  private:
+
+  void InitGL();
+  void InitializeProgram();
+  void InitializeVertexBuffer();
+  GLuint CreateShader(GLenum shaderType, const std::string &shaderFile);
+  GLuint CreateProgram(const std::vector<GLuint> &shaderList);
+  std::string LoadStringFromFile(const char* path);
 
 };
 

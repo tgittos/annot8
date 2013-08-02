@@ -43,11 +43,14 @@ endif
 .PHONY: all clean includes assets
 .DEFAULT: all
 
-all: $(EXECUTABLES)
+all: $(EXECUTABLES) shaders
 
 clean :
 	rm -Rf bin
 	rm *.o
+
+shaders:
+	cp demo* bin/.
 
 annot8r: Annot8r.o Main.o
 	mkdir -p bin
