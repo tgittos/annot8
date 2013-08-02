@@ -2,11 +2,12 @@
 #define ANNOT8R_HPP
 
 #include <SDL/SDL.h>
+#include <SDL_ttf.h>
 // rock and roll, OpenGL
 #ifdef __APPLE__
   #include <OpenGL/gl.h>
   #include <OpenGL/glu.h>
-  #include <GLUT/glut.h> 
+  #include <GLUT/glut.h>
 #else
   #ifdef _WIN32
     #include <windows.h>

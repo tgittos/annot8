@@ -31,6 +31,15 @@ bool Annot8r::OnInit() {
     return false;
   }
 
+  // initialize SDL_ttf
+  SDL_ShowCursor( SDL_DISABLE ); // The cursor is ugly :)
+  TTF_Init();
+
+  // TTF_Init() is like SDL_Init(), but with no parameters.  Basically, it initializes
+  //   SDL_TTF.  There's really not much to it.  Remember, when the program ends, we have
+  //   to call TTF_Quit().  atexit(TTF_Quit) ensures that when we call exit(), the
+  //   program calls TTF_Quit() for us. 
+
   // initialize OpenGL
   glClearColor(0, 0, 0, 0);
   glViewport(0, 0, 800, 600);
@@ -58,7 +67,7 @@ void Annot8r::OnRender() {
     glColor3f(1, 0, 1); glVertex3f(100, 100, 0);
     glColor3f(1, 1, 1); glVertex3f(0, 100, 0);
   glEnd();
-                                 
+
   SDL_GL_SwapBuffers();
 }
 
@@ -69,5 +78,6 @@ void Annot8r::OnEvent(SDL_Event* event) {
 }
 
 void Annot8r::OnCleanup() {
+  TTF_Quit();
   SDL_Quit();
 }
