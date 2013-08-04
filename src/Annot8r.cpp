@@ -31,6 +31,11 @@ bool Annot8r::OnInit() {
     return false;
   }
 
+  // initialize glew
+  if (glewInit() != GLEW_OK) {
+	  return false;
+  }
+
   // initialize SDL_ttf
   SDL_ShowCursor( SDL_DISABLE ); // The cursor is ugly :)
   TTF_Init();

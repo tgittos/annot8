@@ -1,7 +1,6 @@
 #ifndef ANNOT8R_HPP
 #define ANNOT8R_HPP
 
-#include <SDL/SDL.h>
 #include <SDL_ttf.h>
 #include <fstream>
 #include <streambuf>
@@ -11,11 +10,14 @@
 
 // rock and roll, OpenGL
 #ifdef __APPLE__
+  #include <SDL/SDL.h>
   #include <OpenGL/gl.h>
   #include <OpenGL/glu.h>
   #include <GLUT/glut.h>
 #else
   #ifdef _WIN32
+	#include <SDL.h>
+	#include <GL/glew.h>
     #include <windows.h>
   #endif
   #include <gl/gl.h>

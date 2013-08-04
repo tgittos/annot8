@@ -16,6 +16,8 @@
 *.suo
 Debug
 Release
+*.opensdf
+*.sdf
 
 # Project config stuff
 out
