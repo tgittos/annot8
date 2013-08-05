@@ -24,6 +24,12 @@ Annot8 will save your notes in a db file that only has to live in the directory 
 your notes will move with the project. You can also optionally include the db into source control, and leverage annot8
 as a means of documenting code.
 
+Example
+-------
+
+Following is an example of the graphica magic (TM) mentioned above:
+!(https://dl.dropboxusercontent.com/u/30857/annot8-idea.jpg)
+
 Installation
 ------------
 
