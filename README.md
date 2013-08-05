@@ -28,7 +28,7 @@ Example
 -------
 
 Following is an example of the graphica magic (TM) mentioned above:
-!(https://dl.dropboxusercontent.com/u/30857/annot8-idea.jpg)
+![https://dl.dropboxusercontent.com/u/30857/annot8-idea.jpg]
 
 Installation
 ------------
