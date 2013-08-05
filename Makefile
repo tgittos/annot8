@@ -30,7 +30,7 @@ SRC_DIR = src
 ifeq "$(OSTYPE)" "Darwin"
 	# Link flags for OS X
 	IFLAGS = -Isrc `sdl-config --cflags`
-	LDFLAGS = `sdl-config --libs` -framework OpenGL -framework GLUT -lSDL_ttf
+	LDFLAGS = `sdl-config --libs` -framework OpenGL -framework GLUT -lGLEW -lSDL_ttf
 else
 	# Link flags for Linux
 	LDFLAGS = -lGL -lGLU -lglut -lGLEW -lSDL -lSDLmain
