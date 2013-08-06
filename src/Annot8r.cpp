@@ -27,26 +27,35 @@ bool Annot8r::OnInit() {
   if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
     return false;
   }
-  if ((displaySurface = SDL_SetVideoMode(800, 600, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL)) == NULL) {
-    return false;
-  }
 
-  // initialize glew
-  if (glewInit() != GLEW_OK) {
-	  return false;
-  }
+  InitSDL();
 
   // initialize SDL_ttf
   SDL_ShowCursor( SDL_DISABLE ); // The cursor is ugly :)
   TTF_Init();
 
-  // TTF_Init() is like SDL_Init(), but with no parameters.  Basically, it initializes
-  //   SDL_TTF.  There's really not much to it.  Remember, when the program ends, we have
-  //   to call TTF_Quit().  atexit(TTF_Quit) ensures that when we call exit(), the
-  //   program calls TTF_Quit() for us. 
+  // Get a surface to render onto
+  if ((displaySurface = SDL_SetVideoMode(800, 600, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL)) == NULL) {
+    return false;
+  }
+
+  // initialize glew (initialize before OpenGL!)
+  if (glewInit() != GLEW_OK) {
+    return false;
+  }
 
   // initialize OpenGL
   InitGL();
+
+  // load the font
+  font = TTF_OpenFont("fonts/VeraMono.ttf", 14);
+  if (NULL == font) {
+    fprintf(stderr, "Couldn't open font file");
+    return false;
+  }
+
+  // set the title
+  SDL_WM_SetCaption("Annot8r", NULL);
 
   return true;
 }
@@ -57,6 +66,38 @@ void Annot8r::InitGL() {
 
   glGenBuffers(1, &vao);
   glBindBuffer(GL_ARRAY_BUFFER, vao);
+
+  // this junk is for text rendering
+  glClearColor(0, 0, 0, 0);
+  glClearDepth(1.0f);
+  glViewport(0, 0, 800, 600);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(0, 800, 600, 0, 1, -1);
+  glMatrixMode(GL_MODELVIEW);
+
+  glEnable(GL_TEXTURE_2D);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+  //glLoadIdentity();
+}
+
+void Annot8r::InitSDL() {
+  SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   8);
+  SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  8);
+  SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
+  SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
+
+  SDL_GL_SetAttribute(SDL_GL_ACCUM_RED_SIZE,   8);
+  SDL_GL_SetAttribute(SDL_GL_ACCUM_GREEN_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_ACCUM_BLUE_SIZE,  8);
+  SDL_GL_SetAttribute(SDL_GL_ACCUM_ALPHA_SIZE, 8);
+
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
 }
 
 void Annot8r::InitializeProgram() {
@@ -141,8 +182,8 @@ GLuint Annot8r::CreateProgram(const std::vector<GLuint> &shaderList) {
 }
 
 void Annot8r::OnRender() {
-  glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  // render WebGL junk
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glUseProgram(theProgram);
 
@@ -155,7 +196,32 @@ void Annot8r::OnRender() {
   glDisableVertexAttribArray(0);
   glUseProgram(0);
 
+  // render text through SDL_ttf
+  DrawText("Hooray, this is not buggy!", 100, 100);
+
   SDL_GL_SwapBuffers();
+}
+
+void Annot8r::DrawText(char* text, int x, int y) {
+  SDL_Rect area;
+  SDL_Color clrFg = {0,0,255,0};
+  SDL_Surface *sText = SDL_DisplayFormatAlpha(TTF_RenderUTF8_Blended( font, text, clrFg ));
+  area.x = 0; area.y = 0; area.w = sText->w; area.h = sText->h;
+  SDL_Surface* temp = SDL_CreateRGBSurface(SDL_HWSURFACE|SDL_SRCALPHA,sText->w,sText->h,32,0x000000ff,0x0000ff00,0x00ff0000,0x000000ff);
+  SDL_BlitSurface(sText, &area, temp, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sText->w, sText->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, temp->pixels);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+  glEnable(GL_TEXTURE_2D);
+  glBegin(GL_QUADS); {
+      glTexCoord2d(0, 0); glVertex3f(x, y, 0);
+      glTexCoord2d(1, 0); glVertex3f(x + sText->w, y, 0);
+      glTexCoord2d(1, 1); glVertex3f(x + sText->w, y + sText->h, 0);
+      glTexCoord2d(0, 1); glVertex3f(x, y + sText->h, 0);
+  } glEnd();
+  glDisable(GL_TEXTURE_2D);
+  SDL_FreeSurface( sText );
+  SDL_FreeSurface( temp );
 }
 
 void Annot8r::OnEvent(SDL_Event* event) {
@@ -165,6 +231,9 @@ void Annot8r::OnEvent(SDL_Event* event) {
 }
 
 void Annot8r::OnCleanup() {
+  // unload the font
+  TTF_CloseFont(font);
+
   TTF_Quit();
   SDL_Quit();
 }

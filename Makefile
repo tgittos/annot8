@@ -40,10 +40,10 @@ endif
 # Project build targets
 ####################################################################
 
-.PHONY: all clean includes assets
+.PHONY: all clean shaders fonts
 .DEFAULT: all
 
-all: $(EXECUTABLES) shaders
+all: $(EXECUTABLES) shaders fonts
 
 clean :
 	rm -Rf bin
@@ -51,6 +51,9 @@ clean :
 
 shaders:
 	cp demo* bin/.
+
+fonts:
+	cp -R fonts bin/.
 
 annot8r: Annot8r.o Main.o
 	mkdir -p bin

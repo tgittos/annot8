@@ -37,6 +37,8 @@ class Annot8r {
   GLuint vao;
   GLuint theProgram;
 
+  TTF_Font* font;
+
   public:
 
   Annot8r();
@@ -51,11 +53,13 @@ class Annot8r {
   private:
 
   void InitGL();
+  void InitSDL();
   void InitializeProgram();
   void InitializeVertexBuffer();
   GLuint CreateShader(GLenum shaderType, const std::string &shaderFile);
   GLuint CreateProgram(const std::vector<GLuint> &shaderList);
   std::string LoadStringFromFile(const char* path);
+  void DrawText(char* text, int x = 0, int y = 0);
 
 };
 
