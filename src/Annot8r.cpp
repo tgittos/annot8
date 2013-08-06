@@ -76,8 +76,14 @@ void Annot8r::InitGL() {
   glOrtho(0, 800, 600, 0, 1, -1);
   glMatrixMode(GL_MODELVIEW);
 
+  // enable textures
   glEnable(GL_TEXTURE_2D);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+  // enable blending
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ONE, GL_ONE); // probably going to have to change this
+  //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA); //I've seen this on most tutorials
 
   //glLoadIdentity();
 }
@@ -203,24 +209,45 @@ void Annot8r::OnRender() {
 }
 
 void Annot8r::DrawText(char* text, int x, int y) {
+  // where to blit onto the target
   SDL_Rect area;
+  area.x = 0; area.y = 0;
+
+  // surface that holds ALL text
+  SDL_Surface* temp = SDL_CreateRGBSurface(SDL_HWSURFACE|SDL_SRCALPHA,800,600,32,0x000000ff,0x0000ff00,0x00ff0000,0x000000ff);
+
+  // write the text
   SDL_Color clrFg = {0,0,255,0};
   SDL_Surface *sText = SDL_DisplayFormatAlpha(TTF_RenderUTF8_Blended( font, text, clrFg ));
-  area.x = 0; area.y = 0; area.w = sText->w; area.h = sText->h;
-  SDL_Surface* temp = SDL_CreateRGBSurface(SDL_HWSURFACE|SDL_SRCALPHA,sText->w,sText->h,32,0x000000ff,0x0000ff00,0x00ff0000,0x000000ff);
-  SDL_BlitSurface(sText, &area, temp, NULL);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sText->w, sText->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, temp->pixels);
+
+  // blit from sText to temp
+  SDL_BlitSurface(sText, NULL, temp, &area);
+
+  // free the text surface
+  SDL_FreeSurface( sText );
+
+
+  // TEMP BLIT MORE TEXT
+  int lineSkip = TTF_FontLineSkip(font);
+  SDL_Surface *sText2 = SDL_DisplayFormatAlpha(TTF_RenderUTF8_Blended( font, "a second line, lol", clrFg ));
+  area.y = lineSkip;
+  SDL_BlitSurface(sText2, NULL, temp, &area);
+  SDL_FreeSurface(sText2);
+
+
+  // put the temp surface into a texture
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, temp->w, temp->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, temp->pixels);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
   glEnable(GL_TEXTURE_2D);
   glBegin(GL_QUADS); {
-      glTexCoord2d(0, 0); glVertex3f(x, y, 0);
-      glTexCoord2d(1, 0); glVertex3f(x + sText->w, y, 0);
-      glTexCoord2d(1, 1); glVertex3f(x + sText->w, y + sText->h, 0);
-      glTexCoord2d(0, 1); glVertex3f(x, y + sText->h, 0);
+      glTexCoord2d(0, 0); glVertex3f(0, 0, 0);
+      glTexCoord2d(1, 0); glVertex3f(800, 0, 0);
+      glTexCoord2d(1, 1); glVertex3f(800, 600, 0);
+      glTexCoord2d(0, 1); glVertex3f(0, 600, 0);
   } glEnd();
   glDisable(GL_TEXTURE_2D);
-  SDL_FreeSurface( sText );
+
   SDL_FreeSurface( temp );
 }
 
