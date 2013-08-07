@@ -203,12 +203,40 @@ void Annot8r::OnRender() {
   glUseProgram(0);
 
   // render text through SDL_ttf
-  DrawText("Hooray, this is not buggy!", 100, 100);
+  DrawText("This is a super long line of text that I'm expecting annot8r to wrap for me so that I don't have to figure out horizontal scroll lines", 100, 100);
 
   SDL_GL_SwapBuffers();
 }
 
-void Annot8r::DrawText(char* text, int x, int y) {
+void Annot8r::DrawText(std::string text, int x, int y) {
+
+  std::vector<std::string> lines;
+
+  // preprocess text to soft break long lines
+  int w = 0, h = 0;
+  TTF_SizeText(font, text.c_str(), &w, &h);
+  if (w > 800) {
+    // we need to wrap
+    // calculate how many times this string needs to be wrapped
+    int times = w / 800;
+    int cursor = text.length() - 1;
+    for(; times > 0; --times) {
+      std::string newLine;
+      while (w > 800) {
+        // search backwards through the string to find the last space
+        // and recalculate the width of the string
+        // continue until we find good place to wrap
+        // we should do this in multiples of the width, and insert
+        cursor = text.rfind(' ', cursor);
+        TTF_SizeText(font, text.substr(0, cursor).c_str(), &w, &h);
+        newLine = text.substr(cursor+1, text.length()-1) + " " + newLine;
+        text = text.substr(0, cursor);
+      }
+      lines.push_back(newLine);
+    }
+  }
+  lines.push_back(text);
+
   // where to blit onto the target
   SDL_Rect area;
   area.x = 0; area.y = 0;
@@ -218,7 +246,7 @@ void Annot8r::DrawText(char* text, int x, int y) {
 
   // write the text
   SDL_Color clrFg = {0,0,255,0};
-  SDL_Surface *sText = SDL_DisplayFormatAlpha(TTF_RenderUTF8_Blended( font, text, clrFg ));
+  SDL_Surface *sText = SDL_DisplayFormatAlpha(TTF_RenderUTF8_Blended( font, text.c_str(), clrFg ));
 
   // blit from sText to temp
   SDL_BlitSurface(sText, NULL, temp, &area);
