@@ -203,7 +203,7 @@ void Annot8r::OnRender() {
   glUseProgram(0);
 
   // render text through SDL_ttf
-  DrawText("This is a super long line of text that I'm expecting annot8r to wrap for me so that I don't have to figure out horizontal scroll lines", 100, 100);
+  DrawText("This is a super long line of text that I'm expecting annot8r to wrap for me so that I don't have to figure out horizontal scroll lines. Seriously, this is a really long line of text, and I'm hoping it can handle more than 2 lines of wrapping automatically.", 100, 100);
 
   SDL_GL_SwapBuffers();
 }
@@ -221,7 +221,7 @@ void Annot8r::DrawText(std::string text, int x, int y) {
     int times = w / 800;
     int cursor = text.length() - 1;
     for(; times > 0; --times) {
-      std::string newLine;
+      std::string leftovers;
       while (w > 800) {
         // search backwards through the string to find the last space
         // and recalculate the width of the string
@@ -229,10 +229,12 @@ void Annot8r::DrawText(std::string text, int x, int y) {
         // we should do this in multiples of the width, and insert
         cursor = text.rfind(' ', cursor);
         TTF_SizeText(font, text.substr(0, cursor).c_str(), &w, &h);
-        newLine = text.substr(cursor+1, text.length()-1) + " " + newLine;
+        leftovers = text.substr(cursor+1, text.length()-1) + " " + leftovers;
         text = text.substr(0, cursor);
       }
-      lines.push_back(newLine);
+      lines.push_back(text);
+      text = leftovers;
+      TTF_SizeText(font, text.c_str(), &w, &h);
     }
   }
   lines.push_back(text);
@@ -244,24 +246,17 @@ void Annot8r::DrawText(std::string text, int x, int y) {
   // surface that holds ALL text
   SDL_Surface* temp = SDL_CreateRGBSurface(SDL_HWSURFACE|SDL_SRCALPHA,800,600,32,0x000000ff,0x0000ff00,0x00ff0000,0x000000ff);
 
-  // write the text
-  SDL_Color clrFg = {0,0,255,0};
-  SDL_Surface *sText = SDL_DisplayFormatAlpha(TTF_RenderUTF8_Blended( font, text.c_str(), clrFg ));
-
-  // blit from sText to temp
-  SDL_BlitSurface(sText, NULL, temp, &area);
-
-  // free the text surface
-  SDL_FreeSurface( sText );
-
-
-  // TEMP BLIT MORE TEXT
   int lineSkip = TTF_FontLineSkip(font);
-  SDL_Surface *sText2 = SDL_DisplayFormatAlpha(TTF_RenderUTF8_Blended( font, "a second line, lol", clrFg ));
-  area.y = lineSkip;
-  SDL_BlitSurface(sText2, NULL, temp, &area);
-  SDL_FreeSurface(sText2);
-
+  int lineCount = lines.size();
+  for (int i = 0; i < lineCount; i++) {
+    // write the text
+    std::string line = lines[i];
+    area.y = lineSkip * i;
+    SDL_Color clrFg = {255,255,255,0};
+    SDL_Surface *sText = SDL_DisplayFormatAlpha(TTF_RenderUTF8_Blended( font, line.c_str(), clrFg ));
+    SDL_BlitSurface(sText, NULL, temp, &area); // blit from sText to temp
+    SDL_FreeSurface(sText); // free the text surface
+  }
 
   // put the temp surface into a texture
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, temp->w, temp->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, temp->pixels);

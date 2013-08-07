@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 // rock and roll, OpenGL
 #ifdef __APPLE__
@@ -31,6 +32,7 @@ class Annot8r {
   private:
 
   bool running;
+
   SDL_Surface* displaySurface;
 
   GLuint positionBufferObject;
@@ -59,7 +61,7 @@ class Annot8r {
   GLuint CreateShader(GLenum shaderType, const std::string &shaderFile);
   GLuint CreateProgram(const std::vector<GLuint> &shaderList);
   std::string LoadStringFromFile(const char* path);
-  void DrawText(char* text, int x = 0, int y = 0);
+  void DrawText(std::string text, int x = 0, int y = 0);
 
 };
 
